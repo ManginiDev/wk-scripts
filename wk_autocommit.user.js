@@ -85,6 +85,8 @@ var toggle = function () {
 };
 
 var sanitize = function (str1) {
+    if(typeof str1 === 'undefined') return '';
+    
     var str2 = str1.replace(/\s/g, ''); // Removes Whitespaces
     str2 = str2.toLowerCase();
     return str2;
@@ -104,9 +106,15 @@ var commit = function () {
 
 var check_input = function () {
         const currentresponse = document.querySelector("#user-response").value;
+        const sanitized_response = sanitize(currentresponse);
+        if(sanitized_response === '') return;
+    
         //console.log("Checking Input", currentresponse, expected_answers);
-        for (var i in expected_answers) {
-            if (sanitize(currentresponse) === sanitize(expected_answers[i])) {
+        for (var index = 0; index <= expected_answers.length; index++) {
+            let answer_been_checked = '';
+
+            answer_been_checked = typeof expected_answers[index] === 'object' ? expected_answers[index].text : expected_answers[index];
+            if (sanitized_response === sanitize(answer_been_checked)) {
                 commit();
                 break;
             }
@@ -182,11 +190,11 @@ window.addEventListener("willShowNextQuestion", function(event) {
         if (subject.type === 'Vocabulary') {
             expected_answers = expected_answers.concat(subject.readings.map((e) => e.reading));
         } else if (subject.type === 'Kanji') {
-            if (subject.primary_reading_type === 'kunyomi') {
-                expected_answers = expected_answers.concat(subject.kunyomi);
-            } else if (subject.primary_reading_type === 'onyomi') {
-                expected_answers = expected_answers.concat(subject.onyomi);
-            }
+            let answers = subject.readings
+                .filter(function(element) { return element.type === subject.primary_reading_type })
+                .map(function(element) { return element.text });
+
+            expected_answers = expected_answers.concat(answers);
         }
     }
 
